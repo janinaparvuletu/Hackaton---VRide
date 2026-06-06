@@ -14,9 +14,9 @@ public class Example : MonoBehaviour
         if(other.gameObject.tag == "Player"){
 
             Debug.Log("Catch Player " + other.gameObject.name, other.gameObject  );
-            Instantiate(BlocktoSpawn, NextBlockSpawnLocation.position, NextBlockSpawnLocation.rotation);
-
+            GameObject SpawnedBlock = Instantiate(BlocktoSpawn, NextBlockSpawnLocation.position, NextBlockSpawnLocation.rotation);
+            SpawnedBlock.GetComponentInChildren<Example>().PreviousBlock = gameObject;
+            if(PreviousBlock != null)   Destroy(PreviousBlock.transform.parent.gameObject);
         }    
     }
-
 }

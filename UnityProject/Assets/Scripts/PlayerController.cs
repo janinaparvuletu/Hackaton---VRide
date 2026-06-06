@@ -1,53 +1,67 @@
 using UnityEngine;
-using UnityEngine.InputSystem; // Obligatoriu pentru Unity 6
 
 public class PlayerController : MonoBehaviour
 {
-    [Header("Setari Viteza")]
-    public float vitezaMaxima = 60f;    // Viteza maxima cand tii W apasat
-    public float acceleratie = 40f;     // Cat de repede prinde viteza cand apesi W
-    public float decelerare = 35f;      // Cat de repede franeaza cand lasi W
-    
-    private float vitezaCurenta = 0f;   // Porneste de la 0 (sta pe loc)
+    [Header("Conexiune Senzor")]
+    [Tooltip("Trage aici obiectul [NetworkManager] din scenă care are scriptul BKUS_BPMReceiver")]
+    public BKUS_BPMReceiver bpmReceiver;
 
-    [Header("Setari Drum")]
-    public float lungimeDrum = 2000f; 
+    [Header("Setari Viteza & BPM (Bio-Feedback)")]
+    public float vitezaMaxima = 60f;    
+    public float acceleratie = 40f;     
+    public float decelerare = 35f;      
+
+    [Tooltip("Pulsul optim. La acest BPM sau mai jos, mașina are viteză maximă.")]
+    public float bpmCalm = 80f; 
+    [Tooltip("Pulsul de stres. La acest BPM sau mai sus, mașina se oprește complet.")]
+    public float bpmAgitat = 120f;
+
+    private float vitezaCurenta = 0f;  
+    private float lungimeDrum = 2000f; 
     private Vector3 pozitieStart;
 
     void Start()
     {
         pozitieStart = transform.position;
-        vitezaCurenta = 0f; // Ne asiguram ca sta pe loc la inceput
+        vitezaCurenta = 0f; 
     }
 
     void Update()
     {
-        // 1. Detectam daca tasta W este apasata
-        bool wApasat = false;
-        if (Keyboard.current != null)
+        // 1. Luăm pulsul live de la senzor. Dacă e 0 (eroare/scos de pe piept), mașina va sta pe loc.
+        int bpmActual = (bpmReceiver != null && bpmReceiver.currentBPM > 0) ? bpmReceiver.currentBPM : 0;
+        
+        float vitezaTinta = 0f;
+
+        // 2. Logica BKUS: Calculăm viteza țintă pe baza stresului
+        if (bpmActual > 0)
         {
-            wApasat = Keyboard.current.wKey.isPressed;
+            // InverseLerp calculează cât de "stresat" este copilul pe o scară de la 0 la 1 (între 80 și 120 BPM)
+            float factorStres = Mathf.InverseLerp(bpmCalm, bpmAgitat, bpmActual);
+            
+            // Inversăm factorul ca să îl premiem pe cel calm: Stres 0 = Viteză 100%
+            float factorCalm = 1f - factorStres; 
+
+            vitezaTinta = vitezaMaxima * factorCalm;
         }
 
-        // 2. Logica de pornire si oprire
-        if (wApasat)
+        // 3. Accelerăm sau frânăm lin către noua viteză dictată de inimă
+        if (vitezaCurenta < vitezaTinta)
         {
-            // Daca apesi W, accelereaza pana la viteza maxima
             vitezaCurenta += acceleratie * Time.deltaTime;
         }
         else
         {
-            // Daca NU apesi W, franeaza pana ajunge la viteză 0
             vitezaCurenta -= decelerare * Time.deltaTime;
         }
 
-        // Limitam viteza: minimul e 0 (sta pe loc), maximul e viteza maxima setata
+        // Limităm stric viteza
         vitezaCurenta = Mathf.Clamp(vitezaCurenta, 0f, vitezaMaxima);
 
-        // 3. MISCAREA (pastram directia care a functionat)
+        // 4. MISCAREA
         transform.Translate(Vector3.forward * -vitezaCurenta * Time.deltaTime, Space.Self);
 
-        // 4. Resetare Pozitie (Loop)
+        // 5. Resetare Pozitie (Loop pentru demo nesfârșit)
         if (Vector3.Distance(pozitieStart, transform.position) > lungimeDrum)
         {
             transform.position = pozitieStart;

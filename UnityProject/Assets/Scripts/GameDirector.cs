@@ -1,25 +1,65 @@
 using UnityEngine;
-using UnityEngine.Networking;
+using TMPro;
 using System.Collections;
 
 public class GameDirector : MonoBehaviour
 {
-    public string urlServer = "http://127.0.0.1:5000/bpm";
-    public float pulsCurent = 70f;
+    public TextMeshProUGUI textHUD;
+    public float lapDuration = 5f; 
+    public int totalLaps = 5;
+    
+    private int currentLap = 1;
+    private float timer = 0f;
 
-    void Start() { StartCoroutine(CitesteServer()); }
-
-    IEnumerator CitesteServer()
+    void Start()
+{
+    // Caută automat un obiect numit "HUD_Main" în scenă
+    GameObject textObj = GameObject.Find("HUD_Main");
+    
+    if (textObj != null)
     {
-        while (true)
+        textHUD = textObj.GetComponent<TextMeshProUGUI>();
+    }
+
+    if (textHUD == null)
+    {
+        Debug.LogError("Eroare: Nu am găsit obiectul HUD_Main în scenă! Redenumește textul tău în HUD_Main.");
+    }
+    else
+    {
+        textHUD.gameObject.SetActive(false);
+        StartCoroutine(ShowPhase(1));
+    }
+}
+
+    void Update()
+    {
+        // Această linie va rula doar dacă Start() a fost completat cu succes
+        timer += Time.deltaTime;
+
+        if (timer >= lapDuration)
         {
-            using (UnityWebRequest req = UnityWebRequest.Get(urlServer))
+            timer = 0f;
+            currentLap++;
+
+            if (currentLap <= totalLaps)
             {
-                yield return req.SendWebRequest();
-                if (req.result == UnityWebRequest.Result.Success) 
-                    float.TryParse(req.downloadHandler.text, out pulsCurent);
+                StartCoroutine(ShowPhase(currentLap));
             }
-            yield return new WaitForSeconds(1f);
+            else
+            {
+                textHUD.text = "RACE FINISHED!";
+                textHUD.gameObject.SetActive(true);
+                this.enabled = false;
+            }
         }
+    }
+
+    IEnumerator ShowPhase(int phaseNumber)
+    {
+        textHUD.text = "PHASE " + phaseNumber;
+        textHUD.gameObject.SetActive(true);
+        yield return new WaitForSeconds(1f);
+        textHUD.gameObject.SetActive(false);
     }
 }

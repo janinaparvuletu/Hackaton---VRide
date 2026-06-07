@@ -23,7 +23,7 @@ public class BotMovement : MonoBehaviour
     void Update()
     {
         // 1. Mișcarea botului (aceeași direcție ca jucătorul)
-        transform.Translate(Vector3.forward * -vitezaBot * Time.deltaTime, Space.Self);
+        transform.Translate(Vector3.forward * vitezaBot * Time.deltaTime, Space.Self);
 
         // 2. Logica de dispariție: dacă playerul a trecut de el (pe axa Z)
         if (playerTransform != null)

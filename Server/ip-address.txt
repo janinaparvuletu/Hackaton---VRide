@@ -1,0 +1,33 @@
+http://ip-address:3000
+
+cd /d D:\folder
+npm init -y
+npm install express socket.io
+node index.js
+
+cd /d D:\folder
+ipconfig
+pip install bleak python-socketio[asyncio]
+pip install bleak python-socketio
+python -m pip install bleak python-socketio
+py -m pip install bleak python-socketio
+python transmitator_bpm.py
+
+sudo apt install python3-full python3-venv
+cd ~/proiect
+python3 -m venv venv
+source venv/bin/activate
+(venv) janina@...
+pip install bleak python-socketio
+pip list
+
+cd ~/proiect
+source venv/bin/activate
+deactivate
+
+# In CMD ca Administrator:
+net stop bthserv
+net start bthserv
+
+netstat -ano | findstr :3000
+taskkill /PID 23596 /F
